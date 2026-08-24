@@ -5,7 +5,10 @@ const fs = require("fs");
 const path = require("path");
 
 const DATA_FILE = path.join(__dirname, "data", "settings.json");
+const OPTIONS_FILE = path.join(__dirname, "data", "options.json");
 const PORT = process.env.PORT || 3100;
+
+const MEAL_KEYS = ["breakfast", "lunch", "dinner", "supper"];
 
 const DEFAULT = {
   title: "三餐转盘",
@@ -62,6 +65,47 @@ const server = http.createServer((req, res) => {
           labels: { ...DEFAULT.labels, ...((data && data.labels) || {}) },
         };
         writeSettings(merged);
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: true }));
+      } catch (e) {
+        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ error: "invalid json" }));
+      }
+    });
+    return;
+  }
+
+  if (req.url === "/api/options" && req.method === "GET") {
+    let o = null;
+    try {
+      o = JSON.parse(fs.readFileSync(OPTIONS_FILE, "utf8"));
+    } catch (e) {
+      o = null;
+    }
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify(o || {}));
+    return;
+  }
+
+  if (req.url === "/api/options" && req.method === "POST") {
+    let body = "";
+    req.on("data", (c) => {
+      body += c;
+      if (body.length > 102400) req.destroy();
+    });
+    req.on("end", () => {
+      try {
+        const data = JSON.parse(body);
+        const clean = {};
+        MEAL_KEYS.forEach((k) => {
+          if (Array.isArray(data[k])) {
+            clean[k] = data[k]
+              .filter((it) => it && typeof it.name === "string" && it.name.trim())
+              .map((it) => ({ name: it.name.trim().slice(0, 12), emoji: it.emoji || "" }));
+          }
+        });
+        fs.mkdirSync(path.dirname(OPTIONS_FILE), { recursive: true });
+        fs.writeFileSync(OPTIONS_FILE, JSON.stringify(clean, null, 2));
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
         res.end(JSON.stringify({ ok: true }));
       } catch (e) {

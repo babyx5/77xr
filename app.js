@@ -132,8 +132,35 @@
     }
   }
 
-  function saveStorage() {
+  function saveOptions() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(options));
+    return fetch("/api/options", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(options),
+    }).catch(() => null);
+  }
+
+  async function initServerOptions() {
+    try {
+      const res = await fetch("/api/options", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      const hasData =
+        data &&
+        ["breakfast", "lunch", "dinner", "supper"].some((k) => Array.isArray(data[k]) && data[k].length > 0);
+      if (hasData) {
+        ["breakfast", "lunch", "dinner", "supper"].forEach((k) => {
+          if (Array.isArray(data[k])) options[k] = data[k];
+        });
+        renderList();
+        redraw();
+      } else {
+        saveOptions();
+      }
+    } catch (e) {
+      /* 服务器不可用时保持本地选项 */
+    }
   }
 
   function sanitizeSettings(s) {
@@ -200,7 +227,7 @@
     document.getElementById("set-label-lunch").value = settings.labels.lunch;
     document.getElementById("set-label-dinner").value = settings.labels.dinner;
     document.getElementById("set-label-supper").value = settings.labels.supper;
-    settingsDialog.showModal();
+    showDialogCompat(settingsDialog);
   }
 
   function getOptions() {
@@ -350,7 +377,7 @@
       remove.setAttribute("aria-label", `删除 ${item.name}`);
       remove.addEventListener("click", () => {
         options[currentMeal].splice(i, 1);
-        saveStorage();
+        saveOptions();
         renderList();
         redraw();
         showToast(`已删除「${item.name}」`);
@@ -387,9 +414,25 @@
     showToast.timer = setTimeout(() => toast.classList.remove("show"), 1600);
   }
 
+  function showDialogCompat(dlg) {
+    if (typeof dlg.showModal === "function") {
+      dlg.showModal();
+    } else {
+      dlg.setAttribute("open", "");
+    }
+  }
+
+  function closeDialogCompat(dlg) {
+    if (typeof dlg.close === "function") {
+      dlg.close();
+    } else {
+      dlg.removeAttribute("open");
+    }
+  }
+
   function openDialog() {
     dialogInput.value = "";
-    dialog.showModal();
+    showDialogCompat(dialog);
     dialogInput.focus();
   }
 
@@ -428,6 +471,9 @@
     });
     settingsDialog.close();
   });
+  document.getElementById("settings-cancel").addEventListener("click", () => {
+    closeDialogCompat(settingsDialog);
+  });
 
   dialogConfirm.addEventListener("click", (e) => {
     const name = dialogInput.value.trim();
@@ -443,10 +489,15 @@
       return;
     }
     options[currentMeal].push({ name, emoji: FALLBACK_EMOJI });
-    saveStorage();
+    saveOptions().then((r) => {
+      showToast(r && r.ok ? `已添加「${name}」，所有访客可见` : `已添加「${name}」，同步服务器失败`);
+    });
     renderList();
     redraw();
-    showToast(`已添加「${name}」并保存到本地`);
+  });
+
+  document.getElementById("dialog-cancel").addEventListener("click", () => {
+    closeDialogCompat(dialog);
   });
 
   dialog.addEventListener("close", () => {
@@ -458,4 +509,5 @@
   applySettings();
   switchMeal("breakfast");
   initServerSettings();
+  initServerOptions();
 })();

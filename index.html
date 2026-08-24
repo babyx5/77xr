@@ -57,18 +57,18 @@
   </main>
 
   <dialog id="edit-dialog" class="dialog">
-    <form method="dialog" class="dialog-body">
+    <div class="dialog-body">
       <h3 id="dialog-title">添加选项</h3>
       <input id="dialog-input" class="dialog-input" type="text" maxlength="12" placeholder="例如：麻辣香锅" autocomplete="off" />
       <div class="dialog-actions">
-        <button value="cancel" class="btn btn-ghost">取消</button>
-        <button id="dialog-confirm" value="confirm" class="btn btn-primary">添加</button>
+        <button id="dialog-cancel" type="button" class="btn btn-ghost">取消</button>
+        <button id="dialog-confirm" type="button" class="btn btn-primary">添加</button>
       </div>
-    </form>
+    </div>
   </dialog>
 
   <dialog id="settings-dialog" class="dialog">
-    <form method="dialog" class="dialog-body">
+    <div class="dialog-body">
       <h3>页面设置</h3>
       <label class="field">
         <span>主标题</span>
@@ -92,10 +92,10 @@
         </div>
       </div>
       <div class="dialog-actions">
-        <button value="cancel" class="btn btn-ghost">取消</button>
-        <button id="settings-confirm" value="confirm" class="btn btn-primary">保存</button>
+        <button id="settings-cancel" type="button" class="btn btn-ghost">取消</button>
+        <button id="settings-confirm" type="button" class="btn btn-primary">保存</button>
       </div>
-    </form>
+    </div>
   </dialog>
 
   <script src="app.js?v=2"></script>
