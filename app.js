@@ -2,6 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "meal-wheel-options-v1";
+  const SETTINGS_KEY = "meal-wheel-settings-v1";
   const MAX_OPTIONS = 12;
   const POINTER_ANGLE = -Math.PI / 2;
   const START_ANGLE = -Math.PI / 2;
@@ -64,6 +65,13 @@
     supper: "夜宵",
   };
 
+  const DEFAULT_SETTINGS = {
+    title: "三餐转盘",
+    subtitle: "今天吃什么外卖？让转盘来决定",
+    footer: "纯前端 · 选项保存在本地浏览器 · 数据不离开你的设备",
+    labels: { ...MEAL_LABELS },
+  };
+
   const FALLBACK_EMOJI = "🍽️";
 
   const COLORS = [
@@ -94,6 +102,9 @@
   const wheelCenterMeal = document.querySelector(".wheel-center-meal");
   const wheelCenterHint = document.querySelector(".wheel-center-hint");
   const wheelCenter = document.querySelector(".wheel-center");
+  const settingsBtn = document.getElementById("settings-btn");
+  const settingsDialog = document.getElementById("settings-dialog");
+  const settingsConfirm = document.getElementById("settings-confirm");
   const dialog = document.getElementById("edit-dialog");
   const dialogInput = document.getElementById("dialog-input");
   const dialogConfirm = document.getElementById("dialog-confirm");
@@ -105,6 +116,7 @@
   let rafId = null;
 
   const stored = loadStorage();
+  const settings = loadSettings();
   const options = {
     breakfast: stored.breakfast || DEFAULT_POOL.breakfast.slice(),
     lunch: stored.lunch || DEFAULT_POOL.lunch.slice(),
@@ -122,6 +134,45 @@
 
   function saveStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(options));
+  }
+
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
+      return {
+        ...DEFAULT_SETTINGS,
+        ...saved,
+        labels: { ...DEFAULT_SETTINGS.labels, ...(saved.labels || {}) },
+      };
+    } catch (e) {
+      return { ...DEFAULT_SETTINGS, labels: { ...DEFAULT_SETTINGS.labels } };
+    }
+  }
+
+  function saveSettings() {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  }
+
+  function applySettings() {
+    document.querySelector(".title").textContent = settings.title;
+    document.querySelector(".subtitle").textContent = settings.subtitle;
+    document.querySelector(".app-footer p").textContent = settings.footer;
+    document.title = settings.title;
+    tabs.forEach((tab) => {
+      tab.textContent = settings.labels[tab.dataset.meal];
+    });
+    wheelCenterMeal.textContent = settings.labels[currentMeal];
+  }
+
+  function openSettingsDialog() {
+    document.getElementById("set-title").value = settings.title;
+    document.getElementById("set-subtitle").value = settings.subtitle;
+    document.getElementById("set-footer").value = settings.footer;
+    document.getElementById("set-label-breakfast").value = settings.labels.breakfast;
+    document.getElementById("set-label-lunch").value = settings.labels.lunch;
+    document.getElementById("set-label-dinner").value = settings.labels.dinner;
+    document.getElementById("set-label-supper").value = settings.labels.supper;
+    settingsDialog.showModal();
   }
 
   function getOptions() {
@@ -288,7 +339,7 @@
       t.classList.toggle("is-active", active);
       t.setAttribute("aria-selected", String(active));
     });
-    wheelCenterMeal.textContent = MEAL_LABELS[meal];
+    wheelCenterMeal.textContent = settings.labels[meal];
     resultSection.classList.add("is-hidden");
     renderList();
     redraw();
@@ -327,6 +378,23 @@
     setTimeout(spin, 250);
   });
   addBtn.addEventListener("click", openDialog);
+  settingsBtn.addEventListener("click", openSettingsDialog);
+
+  settingsConfirm.addEventListener("click", (e) => {
+    e.preventDefault();
+    const val = (id, fallback) => document.getElementById(id).value.trim() || fallback;
+    settings.title = val("set-title", DEFAULT_SETTINGS.title);
+    settings.subtitle = val("set-subtitle", DEFAULT_SETTINGS.subtitle);
+    settings.footer = val("set-footer", DEFAULT_SETTINGS.footer);
+    settings.labels.breakfast = val("set-label-breakfast", DEFAULT_SETTINGS.labels.breakfast);
+    settings.labels.lunch = val("set-label-lunch", DEFAULT_SETTINGS.labels.lunch);
+    settings.labels.dinner = val("set-label-dinner", DEFAULT_SETTINGS.labels.dinner);
+    settings.labels.supper = val("set-label-supper", DEFAULT_SETTINGS.labels.supper);
+    saveSettings();
+    applySettings();
+    settingsDialog.close();
+    showToast("设置已保存");
+  });
 
   dialogConfirm.addEventListener("click", (e) => {
     const name = dialogInput.value.trim();
@@ -354,5 +422,6 @@
 
   window.addEventListener("resize", redraw);
 
+  applySettings();
   switchMeal("breakfast");
 })();

@@ -34,6 +34,7 @@
     <div class="actions">
       <button id="spin-btn" class="btn btn-primary">开转！</button>
       <button id="add-btn" class="btn btn-ghost">＋ 加餐</button>
+      <button id="settings-btn" class="btn btn-ghost btn-icon" title="页面设置" aria-label="页面设置">⚙️</button>
     </div>
 
     <section id="result" class="result is-hidden" aria-live="polite">
@@ -62,6 +63,37 @@
       <div class="dialog-actions">
         <button value="cancel" class="btn btn-ghost">取消</button>
         <button id="dialog-confirm" value="confirm" class="btn btn-primary">添加</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog" class="dialog">
+    <form method="dialog" class="dialog-body">
+      <h3>页面设置</h3>
+      <label class="field">
+        <span>主标题</span>
+        <input id="set-title" class="dialog-input" type="text" maxlength="20" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>副标题</span>
+        <input id="set-subtitle" class="dialog-input" type="text" maxlength="40" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>页脚文字</span>
+        <input id="set-footer" class="dialog-input" type="text" maxlength="60" autocomplete="off" />
+      </label>
+      <div class="field">
+        <span>分类名称</span>
+        <div class="field-row">
+          <input id="set-label-breakfast" class="dialog-input" type="text" maxlength="6" autocomplete="off" />
+          <input id="set-label-lunch" class="dialog-input" type="text" maxlength="6" autocomplete="off" />
+          <input id="set-label-dinner" class="dialog-input" type="text" maxlength="6" autocomplete="off" />
+          <input id="set-label-supper" class="dialog-input" type="text" maxlength="6" autocomplete="off" />
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn btn-ghost">取消</button>
+        <button id="settings-confirm" value="confirm" class="btn btn-primary">保存</button>
       </div>
     </form>
   </dialog>

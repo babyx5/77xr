@@ -201,6 +201,10 @@ body {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
+.btn-icon {
+  padding: 13px 15px;
+}
+
 .result {
   width: 100%;
   margin-bottom: 26px;
@@ -356,6 +360,28 @@ body {
   gap: 10px;
 }
 
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field > span {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.field-row .dialog-input {
+  padding: 10px 6px;
+  text-align: center;
+}
+
 .toast {
   position: fixed;
   left: 50%;
@@ -391,5 +417,13 @@ body {
 
   .btn {
     padding: 12px 24px;
+  }
+
+  .btn-icon {
+    padding: 12px 14px;
+  }
+
+  .field-row {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
