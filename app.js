@@ -43,12 +43,25 @@
       { name: "日式便当", emoji: "🍱" },
       { name: "小龙虾", emoji: "🦞" },
     ],
+    supper: [
+      { name: "烧烤", emoji: "🍢" },
+      { name: "麻辣烫", emoji: "🍲" },
+      { name: "炒粉", emoji: "🍝" },
+      { name: "泡面", emoji: "🍜" },
+      { name: "炸鸡", emoji: "🍗" },
+      { name: "小龙虾", emoji: "🦞" },
+      { name: "砂锅粥", emoji: "🍚" },
+      { name: "关东煮", emoji: "🍥" },
+      { name: "手抓饼", emoji: "🫓" },
+      { name: "煎饺", emoji: "🥟" },
+    ],
   };
 
   const MEAL_LABELS = {
     breakfast: "早餐",
     lunch: "午餐",
     dinner: "晚餐",
+    supper: "夜宵",
   };
 
   const FALLBACK_EMOJI = "🍽️";
@@ -80,6 +93,7 @@
   const listBody = document.getElementById("list-body");
   const wheelCenterMeal = document.querySelector(".wheel-center-meal");
   const wheelCenterHint = document.querySelector(".wheel-center-hint");
+  const wheelCenter = document.querySelector(".wheel-center");
   const dialog = document.getElementById("edit-dialog");
   const dialogInput = document.getElementById("dialog-input");
   const dialogConfirm = document.getElementById("dialog-confirm");
@@ -95,6 +109,7 @@
     breakfast: stored.breakfast || DEFAULT_POOL.breakfast.slice(),
     lunch: stored.lunch || DEFAULT_POOL.lunch.slice(),
     dinner: stored.dinner || DEFAULT_POOL.dinner.slice(),
+    supper: stored.supper || DEFAULT_POOL.supper.slice(),
   };
 
   function loadStorage() {
@@ -306,6 +321,7 @@
   });
 
   spinBtn.addEventListener("click", spin);
+  wheelCenter.addEventListener("click", spin);
   spinAgain.addEventListener("click", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     setTimeout(spin, 250);
