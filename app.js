@@ -116,7 +116,7 @@
   let rafId = null;
 
   const stored = loadStorage();
-  const settings = loadSettings();
+  let settings = loadLocalSettings();
   const options = {
     breakfast: stored.breakfast || DEFAULT_POOL.breakfast.slice(),
     lunch: stored.lunch || DEFAULT_POOL.lunch.slice(),
@@ -136,21 +136,49 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(options));
   }
 
-  function loadSettings() {
+  function sanitizeSettings(s) {
+    return {
+      ...DEFAULT_SETTINGS,
+      ...s,
+      labels: { ...DEFAULT_SETTINGS.labels, ...((s && s.labels) || {}) },
+    };
+  }
+
+  function loadLocalSettings() {
     try {
-      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {};
-      return {
-        ...DEFAULT_SETTINGS,
-        ...saved,
-        labels: { ...DEFAULT_SETTINGS.labels, ...(saved.labels || {}) },
-      };
+      return sanitizeSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {});
     } catch (e) {
-      return { ...DEFAULT_SETTINGS, labels: { ...DEFAULT_SETTINGS.labels } };
+      return sanitizeSettings({});
     }
   }
 
   function saveSettings() {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    return fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    }).catch(() => null);
+  }
+
+  async function initServerSettings() {
+    try {
+      const res = await fetch("/api/settings", { cache: "no-store" });
+      if (!res.ok) return;
+      const serverSettings = sanitizeSettings(await res.json());
+      const isDefault = JSON.stringify(serverSettings) === JSON.stringify(sanitizeSettings({}));
+      const hasLocal = !!localStorage.getItem(SETTINGS_KEY);
+      if (!isDefault || !hasLocal) {
+        settings = serverSettings;
+        applySettings();
+        switchMeal(currentMeal);
+      }
+      if (isDefault && hasLocal) {
+        saveSettings();
+      }
+    } catch (e) {
+      /* 服务器不可用时保持本地设置 */
+    }
   }
 
   function applySettings() {
@@ -390,10 +418,15 @@
     settings.labels.lunch = val("set-label-lunch", DEFAULT_SETTINGS.labels.lunch);
     settings.labels.dinner = val("set-label-dinner", DEFAULT_SETTINGS.labels.dinner);
     settings.labels.supper = val("set-label-supper", DEFAULT_SETTINGS.labels.supper);
-    saveSettings();
     applySettings();
+    saveSettings().then((r) => {
+      if (r && r.ok) {
+        showToast("设置已保存，所有访客可见");
+      } else {
+        showToast("已保存到本地，同步服务器失败");
+      }
+    });
     settingsDialog.close();
-    showToast("设置已保存");
   });
 
   dialogConfirm.addEventListener("click", (e) => {
@@ -424,4 +457,5 @@
 
   applySettings();
   switchMeal("breakfast");
+  initServerSettings();
 })();
